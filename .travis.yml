@@ -1,35 +1,28 @@
-# .travis.yml
 language: minimal
-os: linux
 arch:
   - amd64
-  - s390x
   - ppc64le
-
-env:
-  - DOCKER_BUILDKIT=0
-
+  - s390x
 services:
   - docker
 
 before_install:
-  # For ppc64le only — upgrade Docker to avoid ONBUILD issue
-  - |
-    if [ "$(uname -m)" = "ppc64le" ]; then
-      echo "Upgrading Docker for ppc64le..."
-      for pkg in docker.io containerd runc; do sudo apt-get remove -y $pkg || true; done
-      sudo apt-get update
-      sudo install -m 0755 -d /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null
-      sudo chmod a+r /etc/apt/keyrings/docker.asc
-      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-      sudo apt-get update
-      sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-      docker version
+  # Install newer Docker only for ppc64le
+  - if [ "$(uname -m)" = "ppc64le" ]; then
+      echo "Upgrading Docker on ppc64le...";
+      for pkg in docker.io containerd runc; do sudo apt-get remove -y $pkg; done;
+      sudo apt-get update;
+      sudo install -m 0755 -d /etc/apt/keyrings;
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null;
+      sudo chmod a+r /etc/apt/keyrings/docker.asc;
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null;
+      sudo apt-get update;
+      sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin;
     fi
 
 script:
-  - echo "=== BUILDING base image ==="
-  - docker build -f Dockerfile.base -t redhat-binary_provider .
-  - echo "=== BUILDING child image ==="
-  - docker build -f Dockerfile.child -t qsc-httpd-provider_redhat .
+  # Build the image that triggers the ONBUILD instructions
+  - echo -e "FROM qsc-httpd-provider_redhat\nARG qsc_deployment_dir\nARG HTTPD_UID\nARG HTTPD_USER" > Dockerfile.consumer
+  - docker build -f Dockerfile . -t qsc-httpd-provider_redhat
+  - docker build -f Dockerfile.consumer . -t consumer-image
