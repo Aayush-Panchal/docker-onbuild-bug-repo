@@ -1,0 +1,4 @@
+# Dockerfile.base
+ARG redhat_minimal_image=registry.access.redhat.com/ubi8/ubi-minimal
+FROM ${redhat_minimal_image} AS redhat-binary_provider
+RUN microdnf install -y expat
