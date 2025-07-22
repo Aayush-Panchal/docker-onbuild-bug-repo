@@ -1,4 +1,14 @@
-# Dockerfile.base
-ARG redhat_minimal_image=registry.access.redhat.com/ubi8/ubi-minimal
+ARG redhat_minimal_image=registry.access.redhat.com/ubi8/ubi-micro
 FROM ${redhat_minimal_image} AS redhat-binary_provider
-RUN microdnf install -y expat
+
+RUN microdnf install -y expat libxcrypt && microdnf clean all
+
+ARG provider_image=docker.io/library/alpine:3.19
+FROM ${provider_image} AS qsc-httpd-provider_redhat
+
+ONBUILD ARG qsc_deployment_dir
+ONBUILD ARG HTTPD_UID
+ONBUILD ARG HTTPD_USER
+
+ONBUILD COPY --from=redhat-binary_provider /lib64/libcrypt.so.2 /lib64/libcrypt.so.2
+ONBUILD COPY --from=redhat-binary_provider /lib64/libexpat.so.1 /lib64/libexpat.so.1
