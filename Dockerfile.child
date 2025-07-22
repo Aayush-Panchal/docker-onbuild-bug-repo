@@ -1,0 +1,10 @@
+# Dockerfile.child
+ARG provider_image=redhat-binary_provider
+FROM ${provider_image} AS qsc-httpd-provider_redhat
+
+ONBUILD ARG qsc_deployment_dir
+ONBUILD ARG HTTPD_UID
+ONBUILD ARG HTTPD_USER
+
+ONBUILD COPY --from=redhat-binary_provider /lib64/libcrypt.so.2 /lib64/libcrypt.so.2
+ONBUILD COPY --from=redhat-binary_provider /lib64/libexpat.so.1 /lib64/libexpat.so.1
