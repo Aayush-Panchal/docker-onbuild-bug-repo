@@ -33,5 +33,6 @@ jobs:
       script:
         - cp Dockerfile.base Dockerfile
         - echo -e "FROM qsc-httpd-provider_redhat\nARG qsc_deployment_dir\nARG HTTPD_UID\nARG HTTPD_USER" > Dockerfile.consumer
-        - docker build -f Dockerfile . -t qsc-httpd-provider_redhat
+        - docker build --build-arg provider_image=docker.io/library/alpine:3.19 -f Dockerfile . -t qsc-httpd-provider_redhat
         - docker build -f Dockerfile.consumer . -t consumer-image
+
