@@ -12,6 +12,7 @@ jobs:
   include:
     - name: "Default Docker Build (Bug Repro)"
       script:
+        - cp Dockerfile.base Dockerfile
         - echo -e "FROM qsc-httpd-provider_redhat\nARG qsc_deployment_dir\nARG HTTPD_UID\nARG HTTPD_USER" > Dockerfile.consumer
         - docker build -f Dockerfile . -t qsc-httpd-provider_redhat
         - docker build -f Dockerfile.consumer . -t consumer-image
@@ -30,6 +31,7 @@ jobs:
         - sudo apt-get update
         - sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
       script:
+        - cp Dockerfile.base Dockerfile
         - echo -e "FROM qsc-httpd-provider_redhat\nARG qsc_deployment_dir\nARG HTTPD_UID\nARG HTTPD_USER" > Dockerfile.consumer
         - docker build -f Dockerfile . -t qsc-httpd-provider_redhat
         - docker build -f Dockerfile.consumer . -t consumer-image
